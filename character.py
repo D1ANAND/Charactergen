@@ -92,4 +92,4 @@ def upload_to_s3(image_bytes, user_prompt):
         print(f"Error uploading to S3: {e}")
         return None
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app)
