@@ -1,0 +1,8 @@
+#local env files
+.env
+.vscode
+
+#for testing purposes
+
+#python cache
+/__pycache__
