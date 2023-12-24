@@ -2,7 +2,6 @@ boto3
 fastapi
 gunicorn
 ibm-watson
-numpy
 openai
 pillow
 pydantic
@@ -11,3 +10,5 @@ python-dotenv
 replicate
 requests
 uvicorn
+urllib3
+ibm-cloud-sdk-core
