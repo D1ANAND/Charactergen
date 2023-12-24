@@ -351,6 +351,11 @@ def upload_to_s3_img(image_bytes, user_prompt):
         return None
 
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello, welcome to the image generation API!"}
+
+
 
 @app.post("/generate-imgtoimg/")
 async def generate_images(image_url: str = Form(...), user_prompt: str = Form(...)):
@@ -406,6 +411,10 @@ async def generate_images(image_url: str = Form(...), user_prompt: str = Form(..
 
             response_result = requests.get(url_generation_result, headers=headers)
             response_result.raise_for_status()
+
+            # Upload the ad poster to S3 with the correct content type
+            s3_public_url = upload_to_s3_img(response_result.content, user_prompt)
+
 
             # Upload generated images to S3
             generated_images = response_result.json().get("generations_by_pk", {}).get("generated_images", [])
