@@ -435,5 +435,6 @@ async def generate_images(image_url: str = Form(...), user_prompt: str = Form(..
             raise HTTPException(status_code=500, detail=str(e)) from e
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app)
+    uvicorn.run(app,port=int(os.environ.get('PORT', 8080)), host="0.0.0.0")
+    
+# uvicorn integrationsfast:app --host 127.0.0.1 --port 8000 --reload

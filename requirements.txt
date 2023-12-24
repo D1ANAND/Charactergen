@@ -12,3 +12,5 @@ requests
 uvicorn
 urllib3
 ibm-cloud-sdk-core
+python-multipart
+ffmpeg-python
