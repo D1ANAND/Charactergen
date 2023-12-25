@@ -75,10 +75,10 @@ async def generate_model_image(mod_description: str = Form(...)):
                 n=1,
             )
 
-            image_content = BytesIO(requests.get(dalle_response.data[0].url).content)
+            s3_public_url = image_content = BytesIO(requests.get(dalle_response.data[0].url).content)
 
             upload_to_s3_mod(image_content, mod_description)
-
+            return {"s3_public_url": s3_public_url}
         except Exception as e:
             print(f"Error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
