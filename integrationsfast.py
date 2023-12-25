@@ -62,7 +62,7 @@ class ModelImageRequest(BaseModel):
         # Set protected_namespaces to an empty tuple to resolve conflicts
         mod_config = {'protected_namespaces': ()}
 
-@app.post("/generate-model-image/")
+@app.post("/model-image/")
 async def generate_model_image(mod_description: str = Form(...)):
     async with mutex:
         try:
@@ -135,7 +135,7 @@ class AdPosterRequest(BaseModel):
         # Set protected_namespaces to an empty tuple to resolve conflicts
         model_config = {'protected_namespaces': ()}
 
-@app.post("/generate-ad-poster/")
+@app.post("/content/")
 async def generate_ad_poster(ad_product_name: str = Form(...), ad_product_description: str = Form(...),image_url1: str = Form(...), image_url2: str = Form(...)):
     async with mutex:
         try:
@@ -359,7 +359,7 @@ def read_root():
 
 
 
-@app.post("/generate-imgtoimg/")
+@app.post("/finetuning/")
 async def generate_images(image_url: str = Form(...), user_prompt: str = Form(...)):
     async with mutex:
         try:
@@ -436,5 +436,5 @@ async def generate_images(image_url: str = Form(...), user_prompt: str = Form(..
             raise HTTPException(status_code=500, detail=str(e)) from e
 
 if __name__ == "__main__":
-    uvicorn.run(app,port=int(os.environ.get('PORT', 8080)), host="0.0.0.0")
+    uvicorn.run(app,port=int(os.environ.get('PORT', 8080)), host="127.0.0.1")
     
