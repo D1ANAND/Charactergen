@@ -20,5 +20,5 @@ COPY . .
 EXPOSE 8000
 
 # Run integrationsFAST.py when the container launches
-CMD [ "python", "-m", "uvicorn", "integrationsfast:app", "--host", "127.0.0.1", "--port", "8080" ]
+CMD [ "python", "-m", "uvicorn", "integrationsfast:app", "--host", "0.0.0.0", "--port", "8080" ]
 # "python" , "integrationsfast.py"

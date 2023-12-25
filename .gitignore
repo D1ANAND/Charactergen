@@ -3,6 +3,7 @@
 .vscode
 
 #for testing purposes
+Procfile
 
 #python cache
 /__pycache__
