@@ -36,7 +36,7 @@ s3 = boto3.client(
 s3_bucket_name="bucketforadgen"
 client = OpenAI()
 
-# IBM Watson setup
+
 apikey = os.environ.get("watson_apikey")
 url = os.environ.get("watson_url")
 authenticator = IAMAuthenticator(apikey)
@@ -66,7 +66,7 @@ class ModelImageRequest(BaseModel):
 async def generate_model_image(mod_description: str = Form(...)):
     async with mutex:
         try:
-            dalle_api_prompt = f"Generate a realistic image of a model captured with a  70-200mm f/2.8E FL ED VR lens, with a shallow depth of field --ar 2:3- with the following attributes: {mod_description}"
+            dalle_api_prompt = f"Generate a realistic image of a model captured from a 70-200mm f/2.8E FL ED VR lens, with a shallow depth of field --ar 2:3- with the following attributes: {mod_description}"
             dalle_response = client.images.generate(
                 model="dall-e-3",
                 prompt=dalle_api_prompt,
@@ -75,19 +75,20 @@ async def generate_model_image(mod_description: str = Form(...)):
                 n=1,
             )
 
-            s3_public_url = image_content = BytesIO(requests.get(dalle_response.data[0].url).content)
+            image_content = BytesIO(requests.get(dalle_response.data[0].url).content)
 
-            upload_to_s3_mod(image_content, mod_description)
-            return {"s3_public_url": s3_public_url}
+            uploaded_url = upload_to_s3_mod(image_content, mod_description)
+            return {"s3_public_url": uploaded_url}
+        
         except Exception as e:
             print(f"Error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 def upload_to_s3_mod(image_content, mod_description):
     try:
         unique_identifier=str(uuid.uuid4())
-        model_description_cleaned = mod_description.replace(" ", "_")
-
         s3_bucket_name = 'bucketforadgen'
+
+        model_description_cleaned = mod_description.replace(" ", "_")
 
         s3_key = f"{model_description_cleaned}_model_img_{unique_identifier}.png"
 
@@ -96,6 +97,7 @@ def upload_to_s3_mod(image_content, mod_description):
         s3_public_url = f'https://{s3_bucket_name}.s3.amazonaws.com/{s3_key}'
         print(f"Public URL for the image: {s3_public_url}")
         return s3_public_url
+    
     except Exception as e:
         print(f"Error uploading to S3: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -104,18 +106,18 @@ def upload_to_s3_ad(image, ad_product_name):
     try:
         unique_identifier=str(uuid.uuid4())
         s3_bucket_name = 'bucketforadgen'
-        # Replace spaces with underscores in the product name
+        
         ad_product_name_cleaned = ad_product_name.replace(" ", "_")
-
-        # Set S3 key based on cleaned product name
+        
         s3_key = f"{ad_product_name_cleaned}_ad_poster_{unique_identifier}.png"
         image_bytesio = BytesIO()
         image.save(image_bytesio, format='PNG')
         image_bytes = image_bytesio.getvalue()
-        s3.put_object(Body=image_bytes, Bucket="bucketforadgen", Key=s3_key, ContentType="image/png")
-        s3_public_url = f'https://bucketforadgen.s3.amazonaws.com/{s3_key}'
+        s3.put_object(Body=image_bytes, Bucket=s3_bucket_name, Key=s3_key, ContentType="image/png")
+        s3_public_url = f'https://{s3_bucket_name}.s3.amazonaws.com/{s3_key}'
         print(f"Ad poster uploaded to S3. Public URL: {s3_public_url}")
         return s3_public_url
+    
     except Exception as e:
         print(f"Error uploading to S3: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -307,23 +309,23 @@ async def generate_video(request: VideoGenerationRequest):
 
 
 
-# Load environment variables from .env file
+
 load_dotenv()
 
-# Set your API key and S3 bucket name
+
 api_key = os.environ.get("LEOAI_API_KEY")
 S3_BUCKET_NAME = 'bucketforadgen'
 
-# Set Leonardo.AI API and S3 endpoint URLs
+
 url_init_image = "https://cloud.leonardo.ai/api/rest/v1/init-image"
 url_generations = "https://cloud.leonardo.ai/api/rest/v1/generations"
 
-# Set model ID for Leonardo Creative
+
 model_id = "e316348f-7773-490e-adcd-46757c738eb7"
 
 region = os.environ.get("AWS_DEFAULT_REGION")
 
-# Set Leonardo.AI headers with API key
+
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
@@ -405,8 +407,7 @@ async def generate_images(image_url: str = Form(...), user_prompt: str = Form(..
             generation_id = response_generate.json().get('sdGenerationJob', {}).get('generationId', '')
             url_generation_result = f"https://cloud.leonardo.ai/api/rest/v1/generations/{generation_id}"
 
-            # Implement webhook callback or polling instead of sleep
-            # For simplicity, using sleep here
+
             time.sleep(20)
 
             response_result = requests.get(url_generation_result, headers=headers)
@@ -437,4 +438,3 @@ async def generate_images(image_url: str = Form(...), user_prompt: str = Form(..
 if __name__ == "__main__":
     uvicorn.run(app,port=int(os.environ.get('PORT', 8080)), host="0.0.0.0")
     
-# uvicorn integrationsfast:app --host 127.0.0.1 --port 8000 --reload
