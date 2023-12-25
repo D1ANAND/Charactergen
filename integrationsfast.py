@@ -62,7 +62,7 @@ class ModelImageRequest(BaseModel):
         # Set protected_namespaces to an empty tuple to resolve conflicts
         mod_config = {'protected_namespaces': ()}
 
-@app.post("/model-image/")
+@app.post("/character/")
 async def generate_model_image(mod_description: str = Form(...)):
     async with mutex:
         try:
@@ -135,7 +135,7 @@ class AdPosterRequest(BaseModel):
         # Set protected_namespaces to an empty tuple to resolve conflicts
         model_config = {'protected_namespaces': ()}
 
-@app.post("/content/")
+@app.post("/image/")
 async def generate_ad_poster(ad_product_name: str = Form(...), ad_product_description: str = Form(...),image_url1: str = Form(...), image_url2: str = Form(...)):
     async with mutex:
         try:
@@ -274,7 +274,7 @@ class VideoGenerationRequest(BaseModel):
     class Config:
         # Set protected_namespaces to an empty tuple to resolve conflicts
         protected_namespaces = ()
-@app.post("/generate-vid/")
+@app.post("/video/")
 async def generate_video(request: VideoGenerationRequest):
     async with mutex:
         try:
@@ -359,7 +359,7 @@ def read_root():
 
 
 
-@app.post("/finetuning/")
+@app.post("/finetune/")
 async def generate_images(image_url: str = Form(...), user_prompt: str = Form(...)):
     async with mutex:
         try:
