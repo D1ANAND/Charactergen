@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y ffmpeg
 # Set the working directory to /fastapi-app
 WORKDIR /INTEGRATE
 
+ENV HOST 0.0.0.0
+
 # Copy the requirements file into the container at /app
 COPY requirements.txt . 
 
