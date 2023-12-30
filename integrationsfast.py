@@ -59,14 +59,15 @@ class ModelImageRequest(BaseModel):
     mod_description: str 
 
     class Config:
+        title = 'ModelImageRequest'
         # Set protected_namespaces to an empty tuple to resolve conflicts
-        mod_config = {'protected_namespaces': ()}
+        protected_namespaces = ()
 # mod_description: str = Form(...)
-@app.post("/character/")
-async def generate_model_image(payload:ModelImageRequest):
+@app.post("/character")
+async def generate_model_image(request:ModelImageRequest):
     async with mutex:
         try:
-            dalle_api_prompt = f"Generate a realistic image of a model captured from a 70-200mm f/2.8E FL ED VR lens, with a shallow depth of field --ar 2:3- with the following attributes: {mod_description}"
+            dalle_api_prompt = f"Generate a realistic image of a model captured from a 70-200mm f/2.8E FL ED VR lens, with a shallow depth of field --ar 2:3- with the following attributes: {request.mod_description}"
             dalle_response = client.images.generate(
                 model="dall-e-3",
                 prompt=dalle_api_prompt,
@@ -77,7 +78,7 @@ async def generate_model_image(payload:ModelImageRequest):
 
             image_content = BytesIO(requests.get(dalle_response.data[0].url).content)
 
-            uploaded_url = upload_to_s3_mod(image_content, mod_description)
+            uploaded_url = upload_to_s3_mod(image_content, request.mod_description)
             return {"s3_public_url": uploaded_url}
         
         except Exception as e:
@@ -125,36 +126,38 @@ def upload_to_s3_ad(image, ad_product_name):
 
 
 class AdPosterRequest(BaseModel):
-    ad_product_name: str = Form(...)
-    ad_product_description: str = Form(...)
-    image_url1: str = Form(...)
-    image_url2: str = Form(...)
+    ad_product_name: str 
+    ad_product_description: str 
+    image_url1: str 
+    image_url2: str 
 
     
     class Config:
+        title = 'AdPosterRequest'
         # Set protected_namespaces to an empty tuple to resolve conflicts
-        model_config = {'protected_namespaces': ()}
+        protected_namespaces = ()
 
-@app.post("/image/")
-async def generate_ad_poster(ad_product_name: str = Form(...), ad_product_description: str = Form(...),image_url1: str = Form(...), image_url2: str = Form(...)):
+# ad_product_name: str = Form(...), ad_product_description: str = Form(...),image_url1: str = Form(...), image_url2: str = Form(...)
+@app.post("/image")
+async def generate_ad_poster(request: AdPosterRequest):
     async with mutex:
         try:
             removebg_url = "https://api.remove.bg/v1.0/removebg"
             headers = {"X-Api-Key": os.environ.get("REMOVEBG_API_KEY")}
 
-            removebg_response1 = requests.post(removebg_url, headers=headers, data={'image_url': image_url1, 'size': 'auto'})
+            removebg_response1 = requests.post(removebg_url, headers=headers, data={'image_url': request.image_url1, 'size': 'auto'})
 
             if removebg_response1.status_code == 200:
                 removebg_content1 = BytesIO(removebg_response1.content)
                 image1_without_bg = Image.open(removebg_content1).convert("RGBA")
 
-                removebg_response2 = requests.post(removebg_url, headers=headers, data={'image_url': image_url2, 'size': 'auto'})
+                removebg_response2 = requests.post(removebg_url, headers=headers, data={'image_url': request.image_url2, 'size': 'auto'})
 
                 if removebg_response2.status_code == 200:
                     removebg_content2 = BytesIO(removebg_response2.content)
                     image2_without_bg = Image.open(removebg_content2).convert("RGBA")
 
-                    tagline_prompt = f"Create a short catchy tagline for a product named {ad_product_name}. Description: {ad_product_description}"
+                    tagline_prompt = f"Create a short catchy tagline for a product named {request.ad_product_name}. Description: {request.ad_product_description}"
                     tagline_response = client.completions.create(
                         model="text-davinci-003",
                         prompt=tagline_prompt,
@@ -177,7 +180,7 @@ async def generate_ad_poster(ad_product_name: str = Form(...), ad_product_descri
                     generated_image.paste(image1_without_bg, (50, 50), mask=image1_without_bg)
                     generated_image.paste(image2_without_bg, (200, 200), mask=image2_without_bg)
 
-                    s3_public_url = upload_to_s3_ad(generated_image, ad_product_name)
+                    s3_public_url = upload_to_s3_ad(generated_image, request.ad_product_name)
                     return {"s3_public_url": s3_public_url}
 
                 else:
@@ -266,15 +269,15 @@ def generate_script(product_name, product_description):
 
 
 class VideoGenerationRequest(BaseModel):
-    model_image: str = Form(...)
-    product_name: str = Form(...)
-    product_description: str = Form(...)
-    model_gender: str = Form(...)
+    model_image: str 
+    product_name: str 
+    product_description: str 
+    model_gender: str 
 
     class Config:
         # Set protected_namespaces to an empty tuple to resolve conflicts
         protected_namespaces = ()
-@app.post("/video/")
+@app.post("/video")
 async def generate_video(request: VideoGenerationRequest):
     async with mutex:
         try:
@@ -359,8 +362,8 @@ def read_root():
 
 
 
-@app.post("/finetune/")
-async def generate_images(image_url: str = Form(...), user_prompt: str = Form(...)):
+@app.post("/finetune")
+async def generate_images(image_url: str , user_prompt: str ):
     async with mutex:
         try:
             # Download the image from the URL
