@@ -368,7 +368,7 @@ class Finetune(BaseModel):
 
     
     class Config:
-        title = 'AdPosterRequest'
+        title = 'Finetune'
         # Set protected_namespaces to an empty tuple to resolve conflicts
         protected_namespaces = ()
 
@@ -431,20 +431,7 @@ async def generate_images(request:Finetune ):
             s3_public_url = upload_to_s3_img(response_result.content, request.user_prompt)
 
 
-            # Upload generated images to S3
-            generated_images = response_result.json().get("generations_by_pk", {}).get("generated_images", [])
-            generated_image_urls = []
-            for idx, image_info in enumerate(generated_images):
-                image_url = image_info.get("url", "")
-                image_bytes = download_image(image_url)
-                generated_image_urls.append(upload_to_s3_img(image_bytes, f"{request.user_prompt}generated{idx}"))
-
-            generations_string = [
-                f"Open-Image-{idx + 1}: {image_url}"
-                for idx, image_url in enumerate(generated_image_urls)
-            ]
-
-            return {"objects": generations_string}
+            return {s3_public_url}
 
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
