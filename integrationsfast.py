@@ -440,7 +440,7 @@ async def generate_images(request:Finetune ):
 
             generations_string = [
                 f"{image_url}"
-                for image_url in enumerate(generated_image_urls)
+                for image_url in (generated_image_urls)
             ]
 
             return {"s3_public_url":generations_string}
