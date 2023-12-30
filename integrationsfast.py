@@ -361,13 +361,24 @@ def read_root():
     return {"message": "Hello, welcome to the image generation API!"}
 
 
+class Finetune(BaseModel):
+
+    image_url: str 
+    user_prompt: str 
+
+    
+    class Config:
+        title = 'AdPosterRequest'
+        # Set protected_namespaces to an empty tuple to resolve conflicts
+        protected_namespaces = ()
+
 
 @app.post("/finetune")
-async def generate_images(image_url: str , user_prompt: str ):
+async def generate_images(request:Finetune ):
     async with mutex:
         try:
             # Download the image from the URL
-            image_bytes = download_image(image_url)
+            image_bytes = download_image(request.image_url)
 
             # Get a presigned URL for uploading an image
             payload_init_image = {"extension": "png"}
@@ -388,7 +399,7 @@ async def generate_images(image_url: str , user_prompt: str ):
             payload_generations = {
                 "height": 832,
                 "modelId": model_id,
-                "prompt": user_prompt,
+                "prompt": request.user_prompt,
                 "width": 640,
                 "alchemy": False,
                 "guidance_scale": 7,
@@ -417,7 +428,7 @@ async def generate_images(image_url: str , user_prompt: str ):
             response_result.raise_for_status()
 
             # Upload the ad poster to S3 with the correct content type
-            s3_public_url = upload_to_s3_img(response_result.content, user_prompt)
+            s3_public_url = upload_to_s3_img(response_result.content, request.user_prompt)
 
 
             # Upload generated images to S3
@@ -426,7 +437,7 @@ async def generate_images(image_url: str , user_prompt: str ):
             for idx, image_info in enumerate(generated_images):
                 image_url = image_info.get("url", "")
                 image_bytes = download_image(image_url)
-                generated_image_urls.append(upload_to_s3_img(image_bytes, f"{user_prompt}generated{idx}"))
+                generated_image_urls.append(upload_to_s3_img(image_bytes, f"{request.user_prompt}generated{idx}"))
 
             generations_string = [
                 f"Open-Image-{idx + 1}: {image_url}"
