@@ -56,14 +56,14 @@ app.add_middleware(
 )
 
 class ModelImageRequest(BaseModel):
-    mod_description: str = Form(...)
+    mod_description: str 
 
     class Config:
         # Set protected_namespaces to an empty tuple to resolve conflicts
         mod_config = {'protected_namespaces': ()}
-
+# mod_description: str = Form(...)
 @app.post("/character/")
-async def generate_model_image(mod_description: str = Form(...)):
+async def generate_model_image(payload:ModelImageRequest):
     async with mutex:
         try:
             dalle_api_prompt = f"Generate a realistic image of a model captured from a 70-200mm f/2.8E FL ED VR lens, with a shallow depth of field --ar 2:3- with the following attributes: {mod_description}"
