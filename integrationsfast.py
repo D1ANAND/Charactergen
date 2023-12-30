@@ -405,7 +405,7 @@ async def generate_images(request:Finetune ):
                 "guidance_scale": 7,
                 "imagePrompts": [image_id],
                 "init_strength": 0.71,
-                "num_images": 2,
+                "num_images": 1,
                 "presetStyle": "LEONARDO",
                 "promptMagic": False,
                 "sd_version": "v1_5",
@@ -429,9 +429,21 @@ async def generate_images(request:Finetune ):
 
             # Upload the ad poster to S3 with the correct content type
             s3_public_url = upload_to_s3_img(response_result.content, request.user_prompt)
+           
+            # Upload generated images to S3
+            generated_images = response_result.json().get("generations_by_pk", {}).get("generated_images", [])
+            generated_image_urls = []
+            for idx, image_info in enumerate(generated_images):
+                image_url = image_info.get("url", "")
+                image_bytes = download_image(image_url)
+                generated_image_urls.append(upload_to_s3_img(image_bytes, f"{request.user_prompt}generated{idx}"))
 
+            generations_string = [
+                f"{image_url}"
+                for image_url in enumerate(generated_image_urls)
+            ]
 
-            return {s3_public_url}
+            return {"s3_public_url":generations_string}
 
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
